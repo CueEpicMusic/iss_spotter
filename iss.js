@@ -8,21 +8,21 @@ const request = require("request");
  *   - The IP address as a string (null if error). Example: "162.245.144.188"
  */
 
-// const fetchMyIP = function (callback) {
-//   // use request to fetch IP address from JSON API
-//   request.get(`https://api.ipify.org?format=json`, (error, response, body) => {
-//     if (error) {
-//       return callback(error, null);
-//     }
-//     if (response.statusCode !== 200) {
-//       const msg = `Status Code ${response.statusCode} when fetching IP: ${body}`;
-//       callback(Error(msg), null);
-//       return;
-//     }
-//     const ip = JSON.parse(body).ip;
-//     callback(null, ip);
-//   });
-// };
+const fetchMyIP = function (callback) {
+  // use request to fetch IP address from JSON API
+  request.get(`https://api.ipify.org?format=json`, (error, response, body) => {
+    if (error) {
+      return callback(error, null);
+    }
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching IP: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
+    const ip = JSON.parse(body).ip;
+    callback(null, ip);
+  });
+};
 
 /**
  * Makes a single API request to retrieve the lat/lng for a given IPv4 address.
@@ -34,24 +34,24 @@ const request = require("request");
  *   - The lat and lng as an object (null if error). Example:
  *     { latitude: '49.27670', longitude: '-123.13000' }
  */
-// const fetchCoordsByIP = function (ip, callback) {
-//   request(
-//     `https://api.ipbase.com/v2/info?apikey=F9g8o6N7Z1Cg6ZayCcPYIEQPBEBtJgbFuKh7cEbH&ip=${ip}`,
-//     (error, response, body) => {
-//       if (error) {
-//         callback(error, null);
-//         return;
-//       }
-//       if (response.statusCode !== 200) {
-//         const msg = `Status Code ${response.statusCode} when fetching Coordinates for IP: ${body}`;
-//         callback(Error(msg), null);
-//         return;
-//       }
-//       const { latitude, longitude } = JSON.parse(body).data.location;
-//       callback(null, { latitude, longitude });
-//     }
-//   );
-// };
+const fetchCoordsByIP = function (ip, callback) {
+  request(
+    `https://api.ipbase.com/v2/info?apikey=F9g8o6N7Z1Cg6ZayCcPYIEQPBEBtJgbFuKh7cEbH&ip=${ip}`,
+    (error, response, body) => {
+      if (error) {
+        callback(error, null);
+        return;
+      }
+      if (response.statusCode !== 200) {
+        const msg = `Status Code ${response.statusCode} when fetching Coordinates for IP: ${body}`;
+        callback(Error(msg), null);
+        return;
+      }
+      const { latitude, longitude } = JSON.parse(body).data.location;
+      callback(null, { latitude, longitude });
+    }
+  );
+};
 
 const fetchFlyoverTimes = function (coords, callback) {
   request(
@@ -72,4 +72,23 @@ const fetchFlyoverTimes = function (coords, callback) {
   );
 };
 
-module.exports = { fetchFlyoverTimes };
+const nextISSTimesForMyLocation = function (callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
+    fetchCoordsByIP(ip, (error, location) => {
+      if (error) {
+        return callback(error, null);
+      }
+      fetchFlyoverTimes(location, (error, nextPasses) => {
+        if (error) {
+          return callback(error, null);
+        }
+        callback(null, nextPasses);
+      });
+    });
+  });
+};
+
+module.exports = { nextISSTimesForMyLocation };
