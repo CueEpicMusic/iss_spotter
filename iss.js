@@ -34,23 +34,42 @@ const request = require("request");
  *   - The lat and lng as an object (null if error). Example:
  *     { latitude: '49.27670', longitude: '-123.13000' }
  */
-const fetchCoordsByIP = function (ip, callback) {
+// const fetchCoordsByIP = function (ip, callback) {
+//   request(
+//     `https://api.ipbase.com/v2/info?apikey=F9g8o6N7Z1Cg6ZayCcPYIEQPBEBtJgbFuKh7cEbH&ip=${ip}`,
+//     (error, response, body) => {
+//       if (error) {
+//         callback(error, null);
+//         return;
+//       }
+//       if (response.statusCode !== 200) {
+//         const msg = `Status Code ${response.statusCode} when fetching Coordinates for IP: ${body}`;
+//         callback(Error(msg), null);
+//         return;
+//       }
+//       const { latitude, longitude } = JSON.parse(body).data.location;
+//       callback(null, { latitude, longitude });
+//     }
+//   );
+// };
+
+const fetchFlyoverTimes = function (coords, callback) {
   request(
-    `https://api.ipbase.com/v2/info?apikey=F9g8o6N7Z1Cg6ZayCcPYIEQPBEBtJgbFuKh7cEbH&ip=${ip}`,
+    `https://iss-pass.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`,
     (error, response, body) => {
       if (error) {
         callback(error, null);
         return;
       }
       if (response.statusCode !== 200) {
-        const msg = `Status Code ${response.statusCode} when fetching Coordinates for IP: ${body}`;
+        const msg = `Status Code ${response.statusCode} when fetching ISS passes times: ${body}`;
         callback(Error(msg), null);
         return;
       }
-      const { latitude, longitude } = JSON.parse(body).data.location;
-      callback(null, { latitude, longitude });
+      const passes = JSON.parse(body).response;
+      callback(null, passes);
     }
   );
 };
 
-module.exports = { fetchCoordsByIP };
+module.exports = { fetchFlyoverTimes };
